@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rolling Bloom Filter Calculator</title>
+    </head>
+    <body>
+        <h1>Rolling Bloom Filter Calculator</h1>
+
+    <script type="application/javascript">
+        function bitsize(capacity, fpp) {
+            return Math.ceil(-capacity * Math.log(fpp) / (Math.log(2.0) * Math.log(2.0)))
+        }
+
+        function onChangeCallback() {
+            var initialCapacity = document.getElementById("initialCapacity").value;
+            var capacityGrowth = document.getElementById("capacityGrowth").value;
+            var fpp = document.getElementById("fpp").value;
+            var fppScale = document.getElementById("fppScale").value;
+
+            var elements = document.getElementById("elements").value;
+
+            var initialFpp = fpp * (1.0 - fppScale);
+            var totalCapacity = 0;
+            var totalSize = 0;
+            var bucket = 0;
+
+            var bucketTable = document.getElementById("buckets");
+            while (bucketTable.rows.length > 1) {
+                bucketTable.deleteRow(1);
+            }
+            
+            while (totalCapacity < elements) {
+                var capacity = Math.ceil(initialCapacity * Math.pow(capacityGrowth, bucket));
+                fpp = initialFpp * Math.pow(fppScale, bucket);
+                bucket++;
+
+                totalCapacity += capacity;
+                var size = Math.ceil(bitsize(capacity, fpp) / 8);
+                totalSize += size;
+
+                var row = bucketTable.insertRow(bucketTable.rows.length);
+                row.insertCell(0).innerHTML = bucket;
+                row.insertCell(1).innerHTML = capacity.toLocaleString();
+                row.insertCell(2).innerHTML = fpp.toPrecision(5);
+                row.insertCell(3).innerHTML = size.toLocaleString();
+                console.log("Bucket " + bucket + " Capacity = " + capacity + " FPP = " + fpp + " Size = " + size + " bytes");
+            }
+
+            document.getElementById("numBuckets").innerHTML = bucket;
+            document.getElementById("size").innerHTML = totalSize.toLocaleString();
+        }
+    </script>
+
+        <form id="calc" action="#">
+            <label for="initialCapacity">Initial Capacity: </label>
+            <input name="initialCapacity" id="initialCapacity" type="number" min="1" max="1000000000" value="10000"
+                                                                                 onchange="onChangeCallback()"><br>
+            <label for="capacityGrowth">Capacity Growth Factor: </label>
+            <input name="capacityGrowth" id="capacityGrowth" type="number" min="1" max="10" value="2" onchange="onChangeCallback()"><br>
+
+            <label for="fpp">False Positive Probability: </label>
+            <input name="fpp" id="fpp" type="number" min="0.000001" max="1.0" value="0.001" onchange="onChangeCallback()"><br>
+            <label for="fppScale">FPP Scale Factor: </label>
+            <input name="fppScale" id="fppScale" type="number" min="0.1" max="0.9" value="0.6" onchange="onChangeCallback()"><br>
+
+            <p>To store <input type="number" name="elements" id="elements" min="0" max="1000000000" step="1000"
+            value="1000000" onchange="onChangeCallback()"> elements
+            will need <span id="numBuckets"></span> buckets with a total size of <span id="size"></span> bytes.
+        </form>
+
+        <table id="buckets">
+            <thead>
+                <tr><th>Bucket #</th><th>Capacity</th><th>FPP</th><th>Size (bytes)</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+    <script type="application/javascript">
+        onChangeCallback();
+    </script>
+    </body>
+</html>
